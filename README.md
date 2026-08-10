@@ -1,6 +1,6 @@
-# Banking MCP Demo for Vercel
+# Demo MCP
 
-A synthetic banking demo exposing four independent MCP servers from one Node.js/Vercel project:
+A synthetic demo exposing four independent MCP servers from a single Node.js Express app:
 
 - `/mcp/customer`
 - `/mcp/portfolio`
@@ -11,37 +11,34 @@ Each endpoint has four tools. All data is static. Write tools validate and ackno
 
 ## Protocol and hosting model
 
-This project uses the v2 split packages from the official TypeScript MCP SDK and `createMcpHandler`, which creates a fresh MCP server per HTTP request. Responses are configured as JSON-only, making the endpoints well suited to Vercel Functions and high-risk-tool demos where no server-side session or mutable state is required.
+This project uses the v2 split packages from the official TypeScript MCP SDK and `createMcpHandler`, which creates a fresh MCP server per HTTP request. Responses are configured as JSON-only, making the endpoints well suited to stateless deployments and high-risk-tool demos where no server-side session or mutable state is required.
 
-## Deploy
+## Run
 
 ```bash
 npm install
-npm run build
-npx vercel
+npm run dev     # http://localhost:3000
 ```
 
-For production deployments, set these environment variables to the public hostname/origin values accepted by the MCP Express protection layer:
+For production deployments, set these environment variables:
 
 ```text
-ALLOWED_HOSTS=your-project.vercel.app
+ALLOWED_HOSTS=your-host.example.com
 ALLOWED_ORIGINS=your-client.example.com
 ```
-
-For a Vercel preview URL, include the preview hostname as well, comma-separated.
 
 ## Test
 
 Health check:
 
 ```bash
-curl https://YOUR_DEPLOYMENT.vercel.app/health
+curl http://localhost:3000/health
 ```
 
 List customer tools:
 
 ```bash
-curl -sS https://YOUR_DEPLOYMENT.vercel.app/mcp/customer \
+curl -sS http://localhost:3000/mcp/customer \
   -X POST \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
@@ -51,7 +48,7 @@ curl -sS https://YOUR_DEPLOYMENT.vercel.app/mcp/customer \
 Call a read tool:
 
 ```bash
-curl -sS https://YOUR_DEPLOYMENT.vercel.app/mcp/customer \
+curl -sS http://localhost:3000/mcp/customer \
   -X POST \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
@@ -61,7 +58,7 @@ curl -sS https://YOUR_DEPLOYMENT.vercel.app/mcp/customer \
 Call a high-risk demo write:
 
 ```bash
-curl -sS https://YOUR_DEPLOYMENT.vercel.app/mcp/customer \
+curl -sS http://localhost:3000/mcp/customer \
   -X POST \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \

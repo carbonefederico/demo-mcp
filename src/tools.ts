@@ -12,7 +12,7 @@ function server(name: string, description: string): McpServer {
 }
 
 export function buildCustomerServer(): McpServer {
-  const mcp = server("bank-customer-mcp", "Static customer profile and demo customer-maintenance operations.");
+  const mcp = server("demo-customer-mcp", "Static customer profile and demo customer-maintenance operations.");
 
   mcp.registerTool("get_customer", {
     description: "Retrieve a single customer's profile, status, KYC status and risk rating.",
@@ -75,7 +75,7 @@ export function buildCustomerServer(): McpServer {
 }
 
 export function buildPortfolioServer(): McpServer {
-  const mcp = server("bank-portfolio-mcp", "Static investment portfolio information and simulated dealing operations.");
+  const mcp = server("demo-portfolio-mcp", "Static investment portfolio information and simulated dealing operations.");
 
   mcp.registerTool("get_portfolio_summary", {
     description: "Get portfolio valuation, cash, daily movement and risk profile for a customer.",
@@ -114,10 +114,10 @@ export function buildPortfolioServer(): McpServer {
 }
 
 export function buildProductsServer(): McpServer {
-  const mcp = server("bank-products-mcp", "Static banking product catalogue, comparison and demo application requests.");
+  const mcp = server("demo-products-mcp", "Static demo product catalogue, comparison and demo application requests.");
 
   mcp.registerTool("list_products", {
-    description: "List banking products, optionally filtered by category.",
+    description: "List demo products, optionally filtered by category.",
     inputSchema: z.object({ category: z.enum(["CURRENT_ACCOUNT", "SAVINGS", "CREDIT_CARD", "INVESTMENT"]).optional() }), annotations: readOnly
   }, async ({ category }) => ok({ products: category ? products.filter(p => p.category === category) : products }));
 
@@ -149,7 +149,7 @@ export function buildProductsServer(): McpServer {
 }
 
 export function buildMortgageServer(): McpServer {
-  const mcp = server("bank-mortgage-mcp", "Static mortgage servicing, affordability, quotation and demo change requests.");
+  const mcp = server("demo-mortgage-mcp", "Static mortgage servicing, affordability, quotation and demo change requests.");
 
   mcp.registerTool("get_mortgage_summary", {
     description: "Retrieve the current mortgage summary for a customer.",
