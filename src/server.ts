@@ -56,7 +56,7 @@ for (const [name, handler] of Object.entries(handlers)) {
 }
 
 app.get("/", (_req: Request, res: Response) => {
-  res.json({ name: "Banking MCP Demo", warning: "All data is synthetic. Write tools acknowledge requests but do not persist changes.", health: "/health", mcpEndpoints: { customer: "/mcp/customer", portfolio: "/mcp/portfolio", products: "/mcp/products", mortgage: "/mcp/mortgage" } });
+  res.json({ name: "Demo MCP Server", warning: "All data is synthetic. Write tools acknowledge requests but do not persist changes.", health: "/health", mcpEndpoints: { customer: "/mcp/customer", portfolio: "/mcp/portfolio", products: "/mcp/products", mortgage: "/mcp/mortgage" } });
 });
 
 const port = process.env.PORT ?? 3000;
