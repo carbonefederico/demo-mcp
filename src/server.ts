@@ -1,8 +1,8 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
-import { buildCustomerServer, buildMortgageServer, buildPortfolioServer, buildProductsServer } from "../src/servers.js";
-import { jwtMiddleware } from "../src/auth.js";
+import { buildCustomerServer, buildMortgageServer, buildPortfolioServer, buildProductsServer } from "./tools.js";
+import { jwtMiddleware } from "./auth.js";
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
@@ -58,5 +58,8 @@ for (const [name, handler] of Object.entries(handlers)) {
 app.get("/", (_req: Request, res: Response) => {
   res.json({ name: "Banking MCP Demo", warning: "All data is synthetic. Write tools acknowledge requests but do not persist changes.", health: "/health", mcpEndpoints: { customer: "/mcp/customer", portfolio: "/mcp/portfolio", products: "/mcp/products", mortgage: "/mcp/mortgage" } });
 });
+
+const port = process.env.PORT ?? 3000;
+app.listen(port, () => console.log(`Listening on http://localhost:${port}`));
 
 export default app;
