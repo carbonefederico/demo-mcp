@@ -5,7 +5,6 @@ import { buildCustomerServer, buildMortgageServer, buildPortfolioServer, buildPr
 import { jwtMiddleware } from "./auth.js";
 
 const app = express();
-app.use(express.json({ limit: "1mb" }));
 
 function csvEnv(name: string): string[] {
   return (process.env[name] ?? "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
