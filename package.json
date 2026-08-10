@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "node --experimental-strip-types src/server.ts",
     "build": "tsc --noEmit",
-    "start": "vercel dev"
+    "start": "node --experimental-strip-types src/server.ts"
   },
   "engines": {
     "node": ">=22"
