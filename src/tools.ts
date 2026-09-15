@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-import { applicationConfigs, customerTransactions, customers, errorEvents, identities, mortgages, portfolios, products, serviceHealth, userSessions } from "./data.ts";
-import { demoWriteResult, error, ok } from "./helpers.ts";
+import { applicationConfigs, customerTransactions, customers, errorEvents, identities, mortgages, portfolios, products, serviceHealth, userSessions } from "./data.js";
+import { demoWriteResult, error, ok } from "./helpers.js";
 
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const simulatedWrite = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };

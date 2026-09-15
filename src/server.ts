@@ -1,8 +1,8 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
-import { buildCustomerServer, buildIamServer, buildMortgageServer, buildOpsServer, buildPortfolioServer, buildProductsServer } from "./tools.ts";
-import { jwtMiddleware } from "./auth.ts";
+import { buildCustomerServer, buildIamServer, buildMortgageServer, buildOpsServer, buildPortfolioServer, buildProductsServer } from "./tools.js";
+import { jwtMiddleware } from "./auth.js";
 
 const app = express();
 
