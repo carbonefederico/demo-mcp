@@ -1,8 +1,8 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler } from "@modelcontextprotocol/server";
-import { buildCustomerServer, buildMortgageServer, buildPortfolioServer, buildProductsServer } from "./tools.js";
-import { jwtMiddleware } from "./auth.js";
+import { buildCustomerServer, buildIamServer, buildMortgageServer, buildOpsServer, buildPortfolioServer, buildProductsServer } from "./tools.ts";
+import { jwtMiddleware } from "./auth.ts";
 
 const app = express();
 
@@ -43,7 +43,9 @@ const handlers = {
   customer: createMcpHandler(buildCustomerServer, { responseMode: "json" }),
   portfolio: createMcpHandler(buildPortfolioServer, { responseMode: "json" }),
   products: createMcpHandler(buildProductsServer, { responseMode: "json" }),
-  mortgage: createMcpHandler(buildMortgageServer, { responseMode: "json" })
+  mortgage: createMcpHandler(buildMortgageServer, { responseMode: "json" }),
+  ops: createMcpHandler(buildOpsServer, { responseMode: "json" }),
+  iam: createMcpHandler(buildIamServer, { responseMode: "json" })
 };
 
 app.get("/health", (_req: Request, res: Response) => {
@@ -55,7 +57,7 @@ for (const [name, handler] of Object.entries(handlers)) {
 }
 
 app.get("/", (_req: Request, res: Response) => {
-  res.json({ name: "Demo MCP Server", warning: "All data is synthetic. Write tools acknowledge requests but do not persist changes.", health: "/health", mcpEndpoints: { customer: "/mcp/customer", portfolio: "/mcp/portfolio", products: "/mcp/products", mortgage: "/mcp/mortgage" } });
+  res.json({ name: "Demo MCP Server", warning: "All data is synthetic. Write tools acknowledge requests but do not persist changes.", health: "/health", mcpEndpoints: { customer: "/mcp/customer", portfolio: "/mcp/portfolio", products: "/mcp/products", mortgage: "/mcp/mortgage", ops: "/mcp/ops", iam: "/mcp/iam" } });
 });
 
 const port = process.env.PORT ?? 3000;

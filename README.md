@@ -1,11 +1,13 @@
 # Demo MCP
 
-A synthetic demo exposing four independent MCP servers from a single Node.js Express app:
+A synthetic demo exposing six independent MCP servers from a single Node.js Express app:
 
 - `/mcp/customer`
 - `/mcp/portfolio`
 - `/mcp/products`
 - `/mcp/mortgage`
+- `/mcp/ops`
+- `/mcp/iam`
 
 Each endpoint has four tools. All data is static. Write tools validate and acknowledge the request but explicitly return `persisted: false`.
 
@@ -92,6 +94,17 @@ The response includes `demoMode: true` and `persisted: false`.
 - `calculate_affordability`
 - `generate_rate_quote`
 - `submit_mortgage_change_request` — high-risk write simulation
+
+### Ops MCP
+- `get_service_health`
+- `search_errors`
+- `analyze_error`
+
+### IAM MCP
+- `get_user_identity` — by `userId` or `email`
+- `list_user_sessions`
+- `get_application_config`
+- `unlock_account` — high-risk write simulation
 
 ## Safety characteristics for demos
 
