@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-import { customerTransactions, customers, mortgages, portfolios, products } from "./data.js";
-import { demoWriteResult, error, ok } from "./helpers.js";
+import { applicationConfigs, customerTransactions, customers, errorEvents, identities, mortgages, portfolios, products, serviceHealth, userSessions } from "./data.ts";
+import { demoWriteResult, error, ok } from "./helpers.ts";
 
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const simulatedWrite = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
@@ -185,6 +185,105 @@ export function buildMortgageServer(): McpServer {
     description: "HIGH-RISK DEMO WRITE. Submit a mortgage servicing change request. No account changes occur.",
     inputSchema: z.object({ mortgageId: z.string(), changeType: z.enum(["PAYMENT_DATE", "OVERPAYMENT", "TERM_CHANGE", "RATE_SWITCH"]), requestedValue: z.string().min(1), confirmedByUser: z.literal(true), reason: z.string().min(5) }), annotations: highRiskWrite
   }, async input => demoWriteResult("SUBMIT_MORTGAGE_CHANGE_REQUEST", input, true));
+
+  return mcp;
+}
+
+export function buildOpsServer(): McpServer {
+  const mcp = server("demo-ops-mcp", "Error, incident and service-health analysis over synthetic operational data.");
+
+  mcp.registerTool("get_service_health", {
+    description: "Get health status, error rate, latency and last deploy for a service, or an overview of all services.",
+    inputSchema: z.object({ service: z.string().optional().describe("Omit to get an overview of all services") }), annotations: readOnly
+  }, async ({ service }) => {
+    if (!service) return ok({ services: serviceHealth });
+    const health = serviceHealth.find(h => h.service === service);
+    return health ? ok(health) : error(`No health data found for ${service}.`, { available: serviceHealth.map(h => h.service) });
+  });
+
+  mcp.registerTool("search_errors", {
+    description: "Search synthetic error events by service, error code or minimum severity.",
+    inputSchema: z.object({
+      service: z.string().optional(),
+      code: z.string().optional(),
+      severity: z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).optional(),
+      limit: z.number().int().min(1).max(20).default(10)
+    }), annotations: readOnly
+  }, async ({ service, code, severity, limit }) => {
+    const rank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+    const matches = errorEvents
+      .filter(e => (!service || e.service === service) && (!code || e.code === code) && (!severity || rank[e.severity] <= rank[severity]))
+      .sort((a, b) => rank[a.severity] - rank[b.severity])
+      .slice(0, limit);
+    return ok({ count: matches.length, errors: matches });
+  });
+
+  mcp.registerTool("analyze_error", {
+    description: "Deep-dive an error event: occurrence timeline, affected users, correlated deploy and root-cause candidates.",
+    inputSchema: z.object({ errorId: z.string().describe("Example: ERR-20001") }), annotations: readOnly
+  }, async ({ errorId }) => {
+    const event = errorEvents.find(e => e.errorId === errorId);
+    if (!event) return error(`Error event ${errorId} was not found.`, { available: errorEvents.map(e => e.errorId) });
+    return ok({
+      ...event,
+      analysis: {
+        summary: `${event.service} reported ${event.occurrences} occurrences of ${event.code} affecting ${event.affectedUsers} users since ${event.firstSeenAt}.`,
+        correlatedDeploy: event.correlatedDeploy
+          ? "First occurrence is within 2 minutes of a deploy: consider a release regression."
+          : "No deploy correlates with the first occurrence.",
+        recommendedNextSteps: [
+          "Check service health for the affected service.",
+          "Review recent change requests for the service.",
+          "If a release regression is confirmed, schedule a rollback change."
+        ]
+      }
+    });
+  });
+
+  return mcp;
+}
+
+export function buildIamServer(): McpServer {
+  const mcp = server("demo-iam-mcp", "Synthetic identity, session and IdP application-configuration lookups for support demos.");
+
+  mcp.registerTool("get_user_identity", {
+    description: "Retrieve an internal user's identity: account status, MFA enrolment, groups and linked customer IDs.",
+    inputSchema: z.object({ userId: z.string().optional(), email: z.string().optional() }), annotations: readOnly
+  }, async ({ userId, email }) => {
+    if (!userId && !email) return error("Provide userId or email.");
+    const identity = identities.find(i => (userId && i.userId === userId) || (email && i.email.toLowerCase() === email.toLowerCase()));
+    return identity ? ok(identity) : error("Identity was not found.", { userId, email });
+  });
+
+  mcp.registerTool("list_user_sessions", {
+    description: "List active synthetic sessions for a user, including device, IP, location and risk flags.",
+    inputSchema: z.object({ userId: z.string() }), annotations: readOnly
+  }, async ({ userId }) => {
+    if (!identities.some(i => i.userId === userId)) return error(`User ${userId} was not found.`);
+    const sessions = userSessions.filter(s => s.userId === userId);
+    return ok({ userId, count: sessions.length, sessions });
+  });
+
+  mcp.registerTool("get_application_config", {
+    description: "Get the synthetic IdP configuration of a registered application: grant types, redirect URIs, scopes and token lifetimes.",
+    inputSchema: z.object({ clientId: z.string().describe("Example: mobile-app") }), annotations: readOnly
+  }, async ({ clientId }) => {
+    const appConfig = applicationConfigs.find(c => c.clientId === clientId);
+    return appConfig ? ok(appConfig) : error(`Application ${clientId} was not found.`, { available: applicationConfigs.map(c => c.clientId) });
+  });
+
+  mcp.registerTool("unlock_account", {
+    description: "HIGH-RISK DEMO WRITE. Unlock a user account or reset its credentials after explicit confirmation. No IdP is changed.",
+    inputSchema: z.object({
+      userId: z.string(),
+      action: z.enum(["UNLOCK", "RESET_MFA"]),
+      confirmedByUser: z.literal(true).describe("Must be true only after explicit user confirmation"),
+      reason: z.string().min(5)
+    }), annotations: highRiskWrite
+  }, async input => {
+    if (!identities.some(i => i.userId === input.userId)) return error(`User ${input.userId} was not found.`);
+    return demoWriteResult(`IAM_${input.action}`, input, true);
+  });
 
   return mcp;
 }
