@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --experimental-strip-types src/server.ts",
+    "dev": "tsx src/server.ts",
     "build": "tsc --noEmit",
     "start": "node --experimental-strip-types src/server.ts"
   },
@@ -22,6 +22,7 @@
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.0",
     "vercel": "^48.0.0"
   }
