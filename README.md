@@ -9,7 +9,7 @@ A synthetic demo exposing six independent MCP servers from a single Node.js Expr
 - `/mcp/ops`
 - `/mcp/iam`
 
-Each endpoint has four tools. All data is static. Write tools validate and acknowledge the request but explicitly return `persisted: false`.
+Each endpoint exposes four tools — three for `/mcp/ops`. All data is static. Write tools validate and acknowledge the request but explicitly return `persisted: false`.
 
 ## Protocol and hosting model
 
