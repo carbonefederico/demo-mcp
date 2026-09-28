@@ -14,12 +14,13 @@ export function error(message: string, details?: unknown): CallToolResult {
   };
 }
 
-export function demoWriteResult(action: string, payload: unknown, approvalRequired = true): CallToolResult {
+export function demoWriteResult(action: string, payload: unknown, approvalRequired = true, txn?: string): CallToolResult {
   const data = {
     demoMode: true,
     persisted: false,
     action,
     approvalRequired,
+    txn,
     requestId: `DEMO-${Date.now()}`,
     submittedAt: new Date().toISOString(),
     payload,

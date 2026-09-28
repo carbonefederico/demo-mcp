@@ -44,12 +44,13 @@ export function buildCustomerServer(): McpServer {
       segment: z.enum(["Retail", "Premier", "Private Banking"]).optional(),
       status: z.enum(["ACTIVE", "RESTRICTED", "CLOSED"]).optional(),
       confirmedByUser: z.literal(true).describe("Must be true only after explicit user confirmation"),
-      reason: z.string().min(5)
+      reason: z.string().min(5),
+      txn: z.string().optional().describe("Optional caller-supplied transaction/reference ID, echoed in the response for idempotency or correlation")
     }).refine(v => Boolean(v.fullName || v.email || v.phone || v.address || v.segment || v.status), { message: "At least one customer field must be supplied." }),
     annotations: highRiskWrite
   }, async input => {
     if (!customers.some(c => c.customerId === input.customerId)) return error(`Customer ${input.customerId} was not found.`);
-    return demoWriteResult("UPDATE_CUSTOMER", input, true);
+    return demoWriteResult("UPDATE_CUSTOMER", input, true, input.txn);
   });
 
   mcp.registerTool("get_customer_transactions", {
@@ -106,9 +107,9 @@ export function buildPortfolioServer(): McpServer {
 
   mcp.registerTool("submit_trade_order", {
     description: "HIGH-RISK DEMO WRITE. Submit a trade-order request after explicit confirmation. No order reaches a market and nothing is persisted.",
-    inputSchema: z.object({ customerId: z.string(), symbol: z.string(), side: z.enum(["BUY", "SELL"]), quantity: z.number().positive(), orderType: z.enum(["MARKET", "LIMIT"]), limitPrice: z.number().positive().optional(), confirmedByUser: z.literal(true) }),
+    inputSchema: z.object({ customerId: z.string(), symbol: z.string(), side: z.enum(["BUY", "SELL"]), quantity: z.number().positive(), orderType: z.enum(["MARKET", "LIMIT"]), limitPrice: z.number().positive().optional(), confirmedByUser: z.literal(true), txn: z.string().optional().describe("Optional caller-supplied transaction/reference ID, echoed in the response for idempotency or correlation") }),
     annotations: highRiskWrite
-  }, async input => demoWriteResult("SUBMIT_TRADE_ORDER", input, true));
+  }, async input => demoWriteResult("SUBMIT_TRADE_ORDER", input, true, input.txn));
 
   return mcp;
 }
@@ -139,10 +140,10 @@ export function buildProductsServer(): McpServer {
 
   mcp.registerTool("request_product_application", {
     description: "HIGH-RISK DEMO WRITE. Create a non-persistent product application request after explicit confirmation.",
-    inputSchema: z.object({ customerId: z.string(), productId: z.string(), confirmedByUser: z.literal(true), channel: z.enum(["WEB", "MOBILE", "BRANCH", "CONTACT_CENTRE"]) }), annotations: simulatedWrite
+    inputSchema: z.object({ customerId: z.string(), productId: z.string(), confirmedByUser: z.literal(true), channel: z.enum(["WEB", "MOBILE", "BRANCH", "CONTACT_CENTRE"]), txn: z.string().optional().describe("Optional caller-supplied transaction/reference ID, echoed in the response for idempotency or correlation") }), annotations: simulatedWrite
   }, async input => {
     if (!products.some(p => p.productId === input.productId)) return error(`Product ${input.productId} was not found.`);
-    return demoWriteResult("REQUEST_PRODUCT_APPLICATION", input, true);
+    return demoWriteResult("REQUEST_PRODUCT_APPLICATION", input, true, input.txn);
   });
 
   return mcp;
@@ -183,8 +184,8 @@ export function buildMortgageServer(): McpServer {
 
   mcp.registerTool("submit_mortgage_change_request", {
     description: "HIGH-RISK DEMO WRITE. Submit a mortgage servicing change request. No account changes occur.",
-    inputSchema: z.object({ mortgageId: z.string(), changeType: z.enum(["PAYMENT_DATE", "OVERPAYMENT", "TERM_CHANGE", "RATE_SWITCH"]), requestedValue: z.string().min(1), confirmedByUser: z.literal(true), reason: z.string().min(5) }), annotations: highRiskWrite
-  }, async input => demoWriteResult("SUBMIT_MORTGAGE_CHANGE_REQUEST", input, true));
+    inputSchema: z.object({ mortgageId: z.string(), changeType: z.enum(["PAYMENT_DATE", "OVERPAYMENT", "TERM_CHANGE", "RATE_SWITCH"]), requestedValue: z.string().min(1), confirmedByUser: z.literal(true), reason: z.string().min(5), txn: z.string().optional().describe("Optional caller-supplied transaction/reference ID, echoed in the response for idempotency or correlation") }), annotations: highRiskWrite
+  }, async input => demoWriteResult("SUBMIT_MORTGAGE_CHANGE_REQUEST", input, true, input.txn));
 
   return mcp;
 }
@@ -278,11 +279,12 @@ export function buildIamServer(): McpServer {
       userId: z.string(),
       action: z.enum(["UNLOCK", "RESET_MFA"]),
       confirmedByUser: z.literal(true).describe("Must be true only after explicit user confirmation"),
-      reason: z.string().min(5)
+      reason: z.string().min(5),
+      txn: z.string().optional().describe("Optional caller-supplied transaction/reference ID, echoed in the response for idempotency or correlation")
     }), annotations: highRiskWrite
   }, async input => {
     if (!identities.some(i => i.userId === input.userId)) return error(`User ${input.userId} was not found.`);
-    return demoWriteResult(`IAM_${input.action}`, input, true);
+    return demoWriteResult(`IAM_${input.action}`, input, true, input.txn);
   });
 
   return mcp;
