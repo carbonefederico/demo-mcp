@@ -39,7 +39,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // RFC 9728 protected-resource metadata: one document per MCP endpoint at the
 // path-preserved well-known location. The resource identifier is derived per
-// request — scheme and host from X-Forwarded-* (falling back to Host), path
+// request — host from X-Client-Host (set by the gateway, survives proxy
+// chains), then X-Forwarded-*, then Host; scheme from X-Forwarded-*; path
 // from the request minus the well-known prefix, plus an optional
 // X-Forwarded-Prefix contributed by the front door — so the document always
 // names the client-facing URI the token binds to (RFC 8707), be it a gateway,
@@ -70,7 +71,7 @@ function authorizationServers(): string[] {
 }
 
 function resourceForRequest(req: Request): { resource: string; endpoint: string } | null {
-  const host = (req.get("x-forwarded-host") ?? req.get("host") ?? "").split(",")[0].trim().toLowerCase();
+  const host = (req.get("x-client-host") ?? req.get("x-forwarded-host") ?? req.get("host") ?? "").split(",")[0].trim().toLowerCase();
   const proto = (req.get("x-forwarded-proto") ?? req.protocol).split(",")[0].trim().toLowerCase();
   if (!host || !/^[a-z0-9.\-]+(?::\d{1,5})?$/.test(host) || (proto !== "http" && proto !== "https")) return null;
 
