@@ -77,6 +77,28 @@ export const portfolios = {
   }
 } as const;
 
+export const customerAccounts = {
+  "CUST-10001": {
+    customerId: "CUST-10001",
+    accounts: [
+      { accountId: "ACC-20001", type: "CURRENT", currency: "EUR", balance: 24310.4, available: 24310.4, status: "ACTIVE" },
+      { accountId: "ACC-20002", type: "SAVINGS", currency: "EUR", balance: 15200, available: 15200, status: "ACTIVE" }
+    ]
+  },
+  "CUST-10002": {
+    customerId: "CUST-10002",
+    accounts: [
+      { accountId: "ACC-20003", type: "CURRENT", currency: "EUR", balance: 4180.9, available: 4180.9, status: "ACTIVE" }
+    ]
+  },
+  "CUST-10003": {
+    customerId: "CUST-10003",
+    accounts: [
+      { accountId: "ACC-20004", type: "CURRENT", currency: "EUR", balance: 96420.5, available: 96420.5, status: "RESTRICTED" }
+    ]
+  }
+} as const;
+
 export const products = [
   { productId: "PRD-CURRENT-PLUS", name: "Current Account Plus", category: "CURRENT_ACCOUNT", annualFee: 0, interestRate: 0, eligibility: "Age 18+, EU resident", features: ["Instant payments", "Virtual card", "Spending insights"] },
   { productId: "PRD-SAVER-FLEX", name: "Flex Saver", category: "SAVINGS", annualFee: 0, interestRate: 2.15, eligibility: "Existing current-account customer", features: ["Instant access", "Monthly interest", "No minimum balance"] },

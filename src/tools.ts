@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-import { applicationConfigs, customerTransactions, customers, errorEvents, identities, mortgages, portfolios, products, serviceHealth, userSessions } from "./data.js";
+import { applicationConfigs, customerAccounts, customerTransactions, customers, errorEvents, identities, mortgages, portfolios, products, serviceHealth, userSessions } from "./data.js";
 import { demoWriteResult, error, ok } from "./helpers.js";
 
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
@@ -70,6 +70,16 @@ export function buildCustomerServer(): McpServer {
       .filter(t => !status || t.status === status)
       .slice(0, limit);
     return ok({ customerId, count: filtered.length, transactions: filtered });
+  });
+
+  mcp.registerTool("get_customer_accounts", {
+    description: "Retrieve the customer's bank accounts: type, currency, balance, availability and status.",
+    inputSchema: z.object({ customerId: z.string().describe("Example: CUST-10001") }),
+    annotations: readOnly
+  }, async ({ customerId }) => {
+    if (!customers.some(c => c.customerId === customerId)) return error(`Customer ${customerId} was not found.`);
+    const data = customerAccounts[customerId as keyof typeof customerAccounts];
+    return data ? ok(data) : error(`No accounts found for ${customerId}.`);
   });
 
   return mcp;
