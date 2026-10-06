@@ -117,7 +117,7 @@ export function buildPortfolioServer(): McpServer {
 
   mcp.registerTool("submit_trade_order", {
     description: "HIGH-RISK DEMO WRITE. Submit a trade-order request after explicit confirmation. No order reaches a market and nothing is persisted.",
-    inputSchema: z.object({ customerId: z.string(), symbol: z.string(), side: z.enum(["BUY", "SELL"]), quantity: z.number().positive(), orderType: z.enum(["MARKET", "LIMIT"]), limitPrice: z.number().positive().optional(), confirmedByUser: z.literal(true), txn: z.string().optional().describe("Optional caller-supplied transaction/reference ID, echoed in the response for idempotency or correlation") }),
+    inputSchema: z.object({ customerId: z.string(), symbol: z.string(), side: z.enum(["BUY", "SELL"]), quantity: z.number().positive(), amount: z.number().positive().optional().describe("Order notional in EUR; authorization policies compare this against order limits"), orderType: z.enum(["MARKET", "LIMIT"]), limitPrice: z.number().positive().optional(), confirmedByUser: z.literal(true), txn: z.string().optional().describe("Optional caller-supplied transaction/reference ID, echoed in the response for idempotency or correlation") }),
     annotations: highRiskWrite
   }, async input => demoWriteResult("SUBMIT_TRADE_ORDER", input, true, input.txn));
 
