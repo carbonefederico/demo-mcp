@@ -60,7 +60,7 @@ function authorizationServers(): string[] {
   if (process.env.OAUTH_ISSUER) return [process.env.OAUTH_ISSUER];
   if (process.env.JWKS_URI) {
     try {
-      const jwks = new URL(process.env.JWKS_URI);
+      const jwks = new URL(process.env.JWKS_URI.split(",")[0].trim());
       const base = jwks.pathname.replace(/\/\.well-known\/jwks\.json$/, "");
       return [`${jwks.protocol}//${jwks.host}${base}`];
     } catch {
