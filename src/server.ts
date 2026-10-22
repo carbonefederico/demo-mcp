@@ -99,6 +99,65 @@ app.get(`${WELL_KNOWN_PREFIX}/*splat`, (req: Request, res: Response) => {
 
 app.use(jwtMiddleware);
 
+// Full request/response logging (demo diagnostics, not for production):
+// one line for the inbound MCP payload, one for the outbound response.
+// Responses are captured via the res "finish" hook, so the MCP handler's
+// own writes are logged without touching the response stream.
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (!req.path.startsWith("/mcp/") || req.method !== "POST") {
+    next();
+    return;
+  }
+
+  const startedAt = Date.now();
+  const chunks: Buffer[] = [];
+  req.on("data", (chunk: Buffer) => chunks.push(chunk));
+  req.on("end", () => {
+    const raw = Buffer.concat(chunks).toString("utf8");
+    try {
+      const body = JSON.parse(raw) as { method?: string; params?: { name?: string } };
+      const tool = body.params?.name ? ` tool=${body.params.name}` : "";
+      console.log(`[mcp] --> ${req.path} ${body.method ?? "(no method)"}${tool} payload=${raw}`);
+    } catch {
+      console.log(`[mcp] --> ${req.path} (unparseable body) payload=${raw}`);
+    }
+  });
+
+  res.on("finish", () => {
+    const status = res.statusCode;
+    const body = (res as Response & { __loggedBody?: string }).__loggedBody ?? "(no body captured)";
+    console.log(`[mcp] <-- ${req.path} ${status} in ${Date.now() - startedAt}ms body=${body}`);
+  });
+
+  next();
+});
+
+// Capture MCP response bodies for the logging middleware above. Mounted
+// only on MCP routes; forwards the finished response body without
+// modifying it.
+const captureResponse = (req: Request, res: Response, next: NextFunction) => {
+  const chunks: Buffer[] = [];
+  const toBuffer = (chunk: unknown): Buffer | null => {
+    if (typeof chunk === "string") return Buffer.from(chunk);
+    if (chunk instanceof Uint8Array) return Buffer.from(chunk);
+    return null;
+  };
+  const originalWrite = res.write.bind(res);
+  const originalEnd = res.end.bind(res);
+  res.write = ((chunk: unknown, ...rest: unknown[]) => {
+    const buf = toBuffer(chunk);
+    if (buf) chunks.push(buf);
+    return (originalWrite as (c: unknown, ...r: unknown[]) => boolean)(chunk, ...rest);
+  }) as typeof res.write;
+  res.end = ((chunk?: unknown, ...rest: unknown[]) => {
+    const buf = toBuffer(chunk);
+    if (buf) chunks.push(buf);
+    (res as Response & { __loggedBody?: string }).__loggedBody = Buffer.concat(chunks).toString("utf8");
+    return (originalEnd as (c?: unknown, ...r: unknown[]) => Response)(chunk, ...rest);
+  }) as typeof res.end;
+  next();
+};
+
 const handlers = {
   customer: createMcpHandler(buildCustomerServer, { responseMode: "json" }),
   portfolio: createMcpHandler(buildPortfolioServer, { responseMode: "json" }),
@@ -113,7 +172,7 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 
 for (const [name, handler] of Object.entries(handlers)) {
-  app.all(`/mcp/${name}`, toNodeHandler(handler));
+  app.all(`/mcp/${name}`, captureResponse, toNodeHandler(handler));
 }
 
 app.get("/", (_req: Request, res: Response) => {
