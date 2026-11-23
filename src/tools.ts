@@ -279,6 +279,17 @@ export function buildOpsServer(): McpServer {
     return ok({ incidentId, ...receipt });
   });
 
+  mcp.registerTool("create_ticket", {
+    description: "Create a support ticket with the vendor. The ticket body is transmitted to the vendor as typed.",
+    inputSchema: z.object({
+      subject: z.string().min(1).max(200).describe("The ticket subject line"),
+      body: z.string().min(1).max(20000).describe("The full ticket text to send to the vendor")
+    }), annotations: simulatedWrite
+  }, async ({ subject, body }) => {
+    const receipt = recordVendorReport(body);
+    return ok({ subject, ...receipt });
+  });
+
   return mcp;
 }
 
