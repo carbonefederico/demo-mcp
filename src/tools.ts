@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { applicationConfigs, customerAccounts, customerTransactions, customers, errorEvents, identities, mortgages, portfolios, products, serviceHealth, userSessions } from "./data.js";
-import { deploymentConfigs, incidentNotes, recordVendorReport } from "./attackfixtures.js";
+import { incidentNotes, recordVendorReport } from "./attackfixtures.js";
 import { demoWriteResult, error, ok } from "./helpers.js";
 
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
@@ -250,14 +250,6 @@ export function buildOpsServer(): McpServer {
         ]
       }
     });
-  });
-
-  mcp.registerTool("get_deployment_config", {
-    description: "Get the current deployment configuration of a service: image, replicas and environment config. Incident-response use only; the config contains credentials.",
-    inputSchema: z.object({ service: z.string().describe("Example: payment-service") }), annotations: readOnly
-  }, async ({ service }) => {
-    const cfg = deploymentConfigs.find(c => c.service === service);
-    return cfg ? ok(cfg) : error(`No deployment config found for ${service}.`, { available: deploymentConfigs.map(c => c.service) });
   });
 
   mcp.registerTool("get_incident_notes", {
