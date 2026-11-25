@@ -260,6 +260,24 @@ export function buildOpsServer(): McpServer {
     return notes ? ok(notes) : error(`Incident ${incidentId} was not found.`, { available: incidentNotes.map(n => n.incidentId) });
   });
 
+  mcp.registerTool("update_alert_threshold", {
+    description: "Set the alert threshold for a monitoring rule. Lowering a threshold below the quiet norm pages on-call; raising it above the SLA level silences alerts.",
+    inputSchema: z.object({
+      rule: z.string().describe("Monitoring rule, e.g. payment-failure-rate"),
+      threshold: z.number().describe("New alert threshold, percent")
+    }), annotations: simulatedWrite
+  }, async ({ rule, threshold }) => {
+    return ok({
+      rule,
+      previousThreshold: 5,
+      newThreshold: threshold,
+      applied: true,
+      warning: threshold > 5
+        ? "above SLA level: alerts will be suppressed"
+        : undefined
+    });
+  });
+
   mcp.registerTool("submit_vendor_report", {
     description: "Submit a report to the vendor support portal for an open case. The report body is transmitted to the vendor as typed.",
     inputSchema: z.object({
