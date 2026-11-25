@@ -56,19 +56,51 @@ function logAuthorization(authHeader: string): void {
   }
 }
 
+// Static API keys from API_KEYS ("key:label" entries, comma-separated).
+// Plain-text comparison and plain-text storage are deliberate demo
+// simplifications; production would use constant-time comparison against
+// stored hashes.
+function keyAccepted(req: Request): { ok: boolean; label?: string } {
+  const header = req.headers.authorization ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const keys = (process.env.API_KEYS ?? "")
+    .split(",")
+    .map(v => v.trim())
+    .filter(Boolean);
+  for (const entry of keys) {
+    const [key, label] = entry.split(":");
+    if (token && token === key) {
+      console.log(`[auth] API key accepted (${label ?? "unlabeled"})`);
+      return { ok: true, label: label ?? "unlabeled" };
+    }
+  }
+  return { ok: false };
+}
+
 export async function jwtMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith("Bearer ")) logAuthorization(authHeader);
 
-  const enabled = (process.env.OAUTH_ENABLED ?? "").toLowerCase();
-  if (enabled !== "true") {
+  const mode = (process.env.AUTH ?? "none").toLowerCase();
+  if (mode === "none") {
     next();
     return;
   }
 
+  if (mode === "key") {
+    if (keyAccepted(req).ok) {
+      next();
+      return;
+    }
+    res.status(401).json({ error: "Missing or invalid API key" });
+    return;
+  }
+
+  // mode === "oauth"
+
   const uris = jwksUris();
   if (uris.length === 0) {
-    res.status(500).json({ error: "JWKS_URI is not configured (comma-separated list of JWKS endpoints)" });
+    res.status(500).json({ error: "AUTH=oauth requires JWKS_URI (comma-separated list of JWKS endpoints)" });
     return;
   }
 

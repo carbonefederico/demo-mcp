@@ -168,7 +168,7 @@ const handlers = {
 };
 
 app.get("/health", (_req: Request, res: Response) => {
-  res.json({ status: "ok", demoMode: true, persistence: false, protocol: "MCP 2026-07-28 / stateless per request", endpoints: Object.keys(handlers).map(name => `/mcp/${name}`) });
+  res.json({ status: "ok", demoMode: true, persistence: false, protocol: "MCP 2026-07-28 / stateless per request", auth: process.env.AUTH ?? "(unset)", endpoints: Object.keys(handlers).map(name => `/mcp/${name}`) });
 });
 
 for (const [name, handler] of Object.entries(handlers)) {

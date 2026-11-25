@@ -29,6 +29,16 @@ ALLOWED_HOSTS=your-host.example.com
 ALLOWED_ORIGINS=your-client.example.com
 ```
 
+## Authentication
+
+The `AUTH` environment variable selects the authentication mode for every MCP endpoint:
+
+- `AUTH=none` (default) — no authentication; all endpoints accept unauthenticated requests.
+- `AUTH=oauth` — Bearer JWTs are verified against the JWKS endpoints in `JWKS_URI` (comma-separated; each token is tried against every endpoint until one verifies), with optional audience checking via `JWT_AUDIENCE`. Each MCP endpoint also serves an RFC 9728 protected-resource metadata document at `/.well-known/oauth-protected-resource/<endpoint>`, advertising its scopes and authorization server so standards-compliant clients can discover how to authenticate.
+- `AUTH=key` — static API keys. Set `API_KEYS` to comma-separated `key:label` entries (for example `sk-demo-ops:ops,sk-demo-readonly:readonly`); requests authenticate with `Authorization: Bearer <key>`. Keys are compared and stored in plain text, which is a deliberate demo simplification.
+
+See `.env.example` for all variables.
+
 ## Test
 
 Health check:
